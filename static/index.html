@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LintasKota API — Reservasi Travel & Carpooling Antarkota</title>
+  <meta name="description" content="API modern untuk reservasi travel dan carpooling antarkota. Dibangun dengan FastAPI, SQLAlchemy, dan JWT Authentication." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080c14;
+      --surface:   #0d1422;
+      --card:      #111827;
+      --border:    rgba(255,255,255,0.07);
+      --accent1:   #6366f1;
+      --accent2:   #8b5cf6;
+      --accent3:   #06b6d4;
+      --green:     #10b981;
+      --orange:    #f59e0b;
+      --red:       #ef4444;
+      --text:      #f1f5f9;
+      --muted:     #94a3b8;
+      --glow:      rgba(99,102,241,0.35);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── BACKGROUND BLOBS ─── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 700px; height: 700px; background: var(--accent1); top: -200px; left: -200px; }
+    .blob-2 { width: 500px; height: 500px; background: var(--accent3); bottom: -150px; right: -150px; animation-delay: -6s; }
+    .blob-3 { width: 400px; height: 400px; background: var(--accent2); top: 40%; left: 55%; animation-delay: -12s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 40px) scale(1.08); }
+    }
+
+    /* ─── NAVBAR ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1.5rem, 5vw, 4rem);
+      height: 68px;
+      background: rgba(8,12,20,0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em;
+    }
+    .logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent3));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .btn-nav {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff !important; border-radius: 8px;
+      font-weight: 600; font-size: 0.875rem;
+      transition: opacity .2s, transform .2s !important;
+    }
+    .btn-nav:hover { opacity: .85; transform: translateY(-1px); }
+
+    /* ─── MAIN WRAPPER ─── */
+    main { position: relative; z-index: 1; }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center;
+      padding: clamp(5rem, 10vw, 8rem) clamp(1.5rem, 5vw, 4rem) 4rem;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid rgba(99,102,241,0.4);
+      border-radius: 999px;
+      background: rgba(99,102,241,0.1);
+      color: #a5b4fc;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+      margin-bottom: 2rem;
+      animation: fadeUp .6s ease both;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    h1 {
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.5rem;
+      animation: fadeUp .7s .1s ease both;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      max-width: 580px;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      font-weight: 400;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+      animation: fadeUp .7s .2s ease both;
+    }
+    .hero-cta {
+      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp .7s .3s ease both;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff;
+      border: none; border-radius: 12px;
+      font-family: inherit; font-size: 1rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      box-shadow: 0 0 30px var(--glow);
+      transition: transform .2s, box-shadow .2s, opacity .2s;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 0 45px var(--glow); opacity: .92; }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-family: inherit; font-size: 1rem; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: border-color .2s, background .2s, transform .2s;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); transform: translateY(-3px); }
+
+    /* ─── STATS STRIP ─── */
+    .stats {
+      display: flex; justify-content: center; gap: clamp(1.5rem, 5vw, 5rem);
+      flex-wrap: wrap;
+      padding: 2rem clamp(1.5rem,5vw,4rem);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp .7s .4s ease both;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 900; letter-spacing: -0.03em; background: linear-gradient(135deg, var(--accent1), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-lab { color: var(--muted); font-size: 0.8rem; font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ─── SECTIONS ─── */
+    section { padding: clamp(4rem, 8vw, 7rem) clamp(1.5rem, 5vw, 4rem); max-width: 1200px; margin: 0 auto; }
+    .section-label { color: var(--accent1); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: .75rem; }
+    .section-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem; line-height: 1.15; }
+    .section-sub { color: var(--muted); font-size: 1rem; line-height: 1.8; max-width: 560px; }
+
+    /* ─── ENDPOINTS GRID ─── */
+    .endpoints-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 3rem; }
+    .endpoints-header .section-sub { margin: 0 auto; }
+
+    .endpoints-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+    .endpoint-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      display: flex; align-items: flex-start; gap: 1rem;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .endpoint-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent3));
+      opacity: 0; transition: opacity .2s;
+    }
+    .endpoint-card:hover { border-color: rgba(99,102,241,.35); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+    .endpoint-card:hover::before { opacity: 1; }
+
+    .method-badge {
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em;
+      white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+    }
+    .GET    { background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.3); }
+    .POST   { background: rgba(99,102,241,.15);  color: #a5b4fc; border: 1px solid rgba(99,102,241,.3); }
+    .PUT    { background: rgba(245,158,11,.15);  color: #fcd34d; border: 1px solid rgba(245,158,11,.3); }
+    .DELETE { background: rgba(239,68,68,.15);   color: #fca5a5; border: 1px solid rgba(239,68,68,.3); }
+
+    .endpoint-info { flex: 1; }
+    .endpoint-path { font-family: 'Courier New', monospace; font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .endpoint-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+    .endpoint-auth { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 0.7rem; font-weight: 600; color: #fbbf24; }
+    .endpoint-auth.admin { color: #f87171; }
+    .endpoint-auth.public { color: var(--green); }
+
+    /* ─── FEATURES ─── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: transform .2s, border-color .2s;
+    }
+    .feature-card:hover { transform: translateY(-5px); border-color: rgba(99,102,241,.3); }
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 1.25rem;
+    }
+    .fi-purple { background: rgba(99,102,241,.15); }
+    .fi-cyan   { background: rgba(6,182,212,.15); }
+    .fi-green  { background: rgba(16,185,129,.15); }
+    .fi-amber  { background: rgba(245,158,11,.15); }
+    .fi-pink   { background: rgba(236,72,153,.15); }
+    .fi-blue   { background: rgba(59,130,246,.15); }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+    .feature-card p { font-size: 0.875rem; color: var(--muted); line-height: 1.65; }
+
+    /* ─── STACK ─── */
+    .stack-row {
+      display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem;
+    }
+    .stack-pill {
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.85rem; font-weight: 500;
+      background: var(--card);
+      color: var(--muted);
+      transition: border-color .2s, color .2s;
+    }
+    .stack-pill:hover { border-color: var(--accent1); color: #a5b4fc; }
+
+    /* ─── CTA BANNER ─── */
+    .cta-banner {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(6,182,212,.1));
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: 24px;
+      padding: clamp(2.5rem, 6vw, 4rem) clamp(2rem, 5vw, 4rem);
+      text-align: center;
+      margin: 0 clamp(1.5rem, 5vw, 4rem) clamp(4rem, 8vw, 7rem);
+    }
+    .cta-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, rgba(99,102,241,.12) 0%, transparent 70%);
+    }
+    .cta-banner h2 { font-size: clamp(1.75rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: .75rem; position: relative; }
+    .cta-banner p { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; position: relative; }
+    .cta-banner .btn-primary { position: relative; font-size: 1.05rem; padding: 15px 36px; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.825rem;
+    }
+    footer span { color: var(--accent1); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(99,102,241,.4); border-radius: 99px; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .endpoints-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background Blobs -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- ─── NAVBAR ─── -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-icon">🚌</div>
+    LintasKota
+  </div>
+  <ul class="nav-links">
+    <li><a href="#endpoints">Endpoints</a></li>
+    <li><a href="#features">Fitur</a></li>
+    <li><a href="#stack">Tech Stack</a></li>
+    <li><a href="/docs" id="nav-docs-btn" class="btn-nav">📄 Swagger Docs</a></li>
+  </ul>
+</nav>
+
+<!-- ─── MAIN ─── -->
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      API v1.0.0 • Live & Ready
+    </div>
+
+    <h1>
+      Reservasi Travel<br />
+      <span class="gradient-text">Antarkota, Seamless.</span>
+    </h1>
+
+    <p class="hero-sub">
+      REST API modern untuk platform carpooling & travel antarkota. Dibangun di atas FastAPI dengan JWT Auth, SQLAlchemy ORM, dan CRUD lengkap siap pakai.
+    </p>
+
+    <div class="hero-cta">
+      <a id="hero-docs-btn" href="/docs" class="btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Buka Swagger Docs
+      </a>
+      <a href="/redoc" id="hero-redoc-btn" class="btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        ReDoc
+      </a>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats reveal">
+    <div class="stat"><div class="stat-num">15+</div><div class="stat-lab">Endpoints</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-lab">Resource Utama</div></div>
+    <div class="stat"><div class="stat-num">JWT</div><div class="stat-lab">Auth Method</div></div>
+    <div class="stat"><div class="stat-num">100%</div><div class="stat-lab">RESTful</div></div>
+  </div>
+
+  <!-- ENDPOINTS -->
+  <section id="endpoints">
+    <div class="endpoints-header reveal">
+      <div class="section-label">📡 API Reference</div>
+      <h2 class="section-title">Semua Endpoint dalam Satu Pandangan</h2>
+      <p class="section-sub">Akses lengkap dengan Authorization role-based: publik, user login, dan admin.</p>
+    </div>
+
+    <!-- AUTH -->
+    <p style="color:var(--muted);font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.75rem;" class="reveal">🔐 Authentication</p>
+    <div class="endpoints-grid reveal">
+      <div class="endpoint-card">
+        <span class="method-badge POST">POST</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/register</div>
+          <div class="endpoint-desc">Registrasi akun pengguna baru dengan name, email, password.</div>
+          <div class="endpoint-auth public">🌐 Publik</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge POST">POST</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/login</div>
+          <div class="endpoint-desc">Login menggunakan email & password, mendapatkan JWT access token.</div>
+          <div class="endpoint-auth public">🌐 Publik</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge GET">GET</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/me</div>
+          <div class="endpoint-desc">Lihat profil akun yang sedang aktif / terautentikasi.</div>
+          <div class="endpoint-auth">🔑 Login Required</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <p style="color:var(--muted);font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:.75rem 0;" class="reveal">👥 Users</p>
+    <div class="endpoints-grid reveal">
+      <div class="endpoint-card">
+        <span class="method-badge GET">GET</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/users</div>
+          <div class="endpoint-desc">Lihat daftar semua pengguna terdaftar. Mendukung pagination.</div>
+          <div class="endpoint-auth admin">🛡️ Admin Only</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge GET">GET</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/users/{id}</div>
+          <div class="endpoint-desc">Ambil detail pengguna berdasarkan ID.</div>
+          <div class="endpoint-auth admin">🛡️ Admin Only</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge PUT">PUT</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/users/{id}</div>
+          <div class="endpoint-desc">Update nama, telepon, atau role pengguna.</div>
+          <div class="endpoint-auth">🔑 Login / Admin</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge DELETE">DELETE</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/users/{id}</div>
+          <div class="endpoint-desc">Hapus pengguna beserta seluruh booking terkait (cascade).</div>
+          <div class="endpoint-auth admin">🛡️ Admin Only</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTES -->
+    <p style="color:var(--muted);font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:.75rem 0;" class="reveal">🗺️ Travel Routes</p>
+    <div class="endpoints-grid reveal">
+      <div class="endpoint-card">
+        <span class="method-badge GET">GET</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/routes</div>
+          <div class="endpoint-desc">Lihat semua rute perjalanan yang tersedia. Mendukung pagination.</div>
+          <div class="endpoint-auth public">🌐 Publik</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge GET">GET</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/routes/{id}</div>
+          <div class="endpoint-desc">Detail satu rute travel tertentu berdasarkan ID.</div>
+          <div class="endpoint-auth public">🌐 Publik</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge POST">POST</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/routes</div>
+          <div class="endpoint-desc">Tambah rute travel baru ke sistem.</div>
+          <div class="endpoint-auth admin">🛡️ Admin Only</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge PUT">PUT</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/routes/{id}</div>
+          <div class="endpoint-desc">Update informasi rute (harga, jadwal, kapasitas, dsb).</div>
+          <div class="endpoint-auth admin">🛡️ Admin Only</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge DELETE">DELETE</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/routes/{id}</div>
+          <div class="endpoint-desc">Hapus rute travel. Semua booking terkait ikut terhapus.</div>
+          <div class="endpoint-auth admin">🛡️ Admin Only</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <p style="color:var(--muted);font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:.75rem 0;" class="reveal">🎫 Bookings</p>
+    <div class="endpoints-grid reveal">
+      <div class="endpoint-card">
+        <span class="method-badge GET">GET</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/bookings</div>
+          <div class="endpoint-desc">Admin: lihat semua booking. User: hanya milik sendiri.</div>
+          <div class="endpoint-auth">🔑 Login Required</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge GET">GET</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/bookings/{id}</div>
+          <div class="endpoint-desc">Detail satu booking. Hanya pemilik atau admin yang bisa akses.</div>
+          <div class="endpoint-auth">🔑 Login Required</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge POST">POST</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/bookings</div>
+          <div class="endpoint-desc">Buat booking baru. Sistem otomatis cek ketersediaan kursi real-time.</div>
+          <div class="endpoint-auth">🔑 Login Required</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge PUT">PUT</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/bookings/{id}</div>
+          <div class="endpoint-desc">Update jumlah kursi atau ubah status booking (confirmed/cancelled).</div>
+          <div class="endpoint-auth">🔑 Login Required</div>
+        </div>
+      </div>
+      <div class="endpoint-card">
+        <span class="method-badge DELETE">DELETE</span>
+        <div class="endpoint-info">
+          <div class="endpoint-path">/bookings/{id}</div>
+          <div class="endpoint-desc">Hapus / batalkan booking. Hanya pemilik atau admin.</div>
+          <div class="endpoint-auth">🔑 Login Required</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="reveal" style="text-align:center;margin-bottom:3rem;">
+      <div class="section-label">⚡ Keunggulan</div>
+      <h2 class="section-title">Dibangun dengan Praktik Terbaik</h2>
+      <p class="section-sub" style="margin:0 auto;">Setiap komponen dipilih untuk performa, keamanan, dan kemudahan pengembangan.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-purple">🔒</div>
+        <h3>JWT Authentication</h3>
+        <p>Sistem autentikasi berbasis token stateless menggunakan python-jose. Token di-expire otomatis dan mudah diintegrasikan ke frontend manapun.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-cyan">🗄️</div>
+        <h3>SQLAlchemy ORM</h3>
+        <p>Model relasional dengan relasi cascade. Siap migrasi dari SQLite ke PostgreSQL atau MySQL hanya dengan ganti satu baris di <code style="color:#a5b4fc">.env</code>.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-green">✅</div>
+        <h3>Validasi Pydantic v2</h3>
+        <p>Semua request dan response divalidasi secara otomatis. Error dikembalikan dengan pesan yang jelas dan terstruktur.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-amber">🛡️</div>
+        <h3>Role-Based Access</h3>
+        <p>Tiga level akses: publik, user login, dan admin. Setiap endpoint dilindungi dependency injection yang bersih dan reusable.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-pink">🌐</div>
+        <h3>CORS Configured</h3>
+        <p>Cross-Origin Resource Sharing sudah dikonfigurasi via <code style="color:#a5b4fc">.env</code>. Tinggal tambah origin frontend Anda.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon fi-blue">📄</div>
+        <h3>Auto Swagger Docs</h3>
+        <p>Dokumentasi interaktif Swagger UI dan ReDoc di-generate otomatis oleh FastAPI. Setiap endpoint langsung bisa dicoba dari browser.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section id="stack">
+    <div class="reveal">
+      <div class="section-label">🛠️ Tech Stack</div>
+      <h2 class="section-title">Teknologi yang Digunakan</h2>
+      <p class="section-sub">Kombinasi library Python terpercaya untuk membangun API production-ready.</p>
+      <div class="stack-row">
+        <span class="stack-pill">⚡ FastAPI</span>
+        <span class="stack-pill">🦄 Uvicorn</span>
+        <span class="stack-pill">🗄️ SQLAlchemy</span>
+        <span class="stack-pill">✅ Pydantic v2</span>
+        <span class="stack-pill">🔑 python-jose</span>
+        <span class="stack-pill">🔒 bcrypt</span>
+        <span class="stack-pill">🌿 python-dotenv</span>
+        <span class="stack-pill">🗃️ SQLite</span>
+        <span class="stack-pill">🛡️ OAuth2</span>
+        <span class="stack-pill">🐍 Python 3.12</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <div class="cta-banner reveal">
+    <h2>Siap Mulai Integrasi?</h2>
+    <p>Buka dokumentasi interaktif dan coba semua endpoint langsung dari browser.</p>
+    <a id="cta-docs-btn" href="/docs" class="btn-primary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Buka Swagger Docs Sekarang
+    </a>
+  </div>
+
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <p>LintasKota API &copy; 2026 &mdash; Dibangun dengan <span>♥</span> menggunakan FastAPI &amp; Python</p>
+</footer>
+
+<script>
+  // Reveal on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Navbar active state
+  window.addEventListener('scroll', () => {
+    document.querySelector('nav').style.background =
+      window.scrollY > 20 ? 'rgba(8,12,20,0.95)' : 'rgba(8,12,20,0.75)';
+  });
+</script>
+</body>
+</html>
