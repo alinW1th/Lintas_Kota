@@ -237,7 +237,10 @@ app.add_middleware(
 )
 
 # Mount folder static (CSS, JS, gambar jika ada)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+try:
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+except Exception:
+    pass  # skip jika folder static tidak tersedia (misal di Vercel)
 
 # ============================================================
 # 8. ENDPOINTS - AUTH
@@ -246,9 +249,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/", response_class=HTMLResponse, tags=["Root"])
 def root():
     """Landing page LintasKota API."""
-    with open("static/index.html", "r", encoding="utf-8") as f:
-        html_content = f.read()
-    return HTMLResponse(content=html_content)
+    try:
+        with open("static/index.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>LintasKota API</h1><p>Docs: <a href='/docs'>/docs</a></p>")
 
 
 @app.post("/register", response_model=UserResponse, status_code=201, tags=["Auth"])
