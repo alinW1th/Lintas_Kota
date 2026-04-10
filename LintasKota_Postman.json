@@ -1,0 +1,168 @@
+{
+    "info": {
+        "name": "LintasKota API - UTS Web Lanjut",
+        "description": "Koleksi pengujian API untuk aplikasi reservasi travel LintasKota.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Register Akun Baru",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email\": \"dosen_penguji@lintaskota.com\",\n    \"password\": \"rahasia123\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/register",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "register"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Login & Dapatkan Token",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.access_token) {",
+                            "    pm.collectionVariables.set(\"jwt_token\", jsonData.access_token);",
+                            "    console.log(\"Token JWT berhasil disimpan secara otomatis!\");",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "dosen_penguji@lintaskota.com",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "rahasia123",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Buat Rute Travel Baru",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"destination\": \"Makassar - Parepare\",\n  \"departure_time\": \"2026-04-12T08:00:00\",\n  \"price\": 120000,\n  \"total_seats\": 6,\n  \"vehicle_type\": \"Mobil Pribadi (Carpooling)\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/routes",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "routes"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Lihat Semua Rute",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/routes",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "routes"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. Booking Kursi (Butuh Token)",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{jwt_token}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"route_id\": 1,\n  \"seats_reserved\": 2\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/bookings",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "bookings"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://127.0.0.1:8000",
+            "type": "string"
+        },
+        {
+            "key": "jwt_token",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
