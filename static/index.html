@@ -478,6 +478,18 @@
     }
     .footer-links a:hover { color: var(--amber-l); }
 
+    /* ─── DESKRIPSI ─── */
+    .desc-bg { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .desc-content {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--text2);
+      max-width: 800px;
+    }
+    .desc-content p { margin-bottom: 1.25rem; }
+    .desc-content p:last-child { margin-bottom: 0; }
+    .desc-content strong { color: var(--navy); }
+
     /* ─── INSTALLATION ─── */
     .install-bg { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 
@@ -612,6 +624,7 @@
     LintasKota
   </a>
   <div class="nav-right">
+    <a href="#deskripsi" class="nav-link">Deskripsi</a>
     <a href="#instalasi" class="nav-link">Instalasi</a>
     <a href="#fitur" class="nav-link">Fitur</a>
     <a href="#direktori" class="nav-link">Struktur</a>
@@ -685,6 +698,21 @@
     </div>
   </div>
 
+</div>
+
+<!-- ─── DESKRIPSI ─── -->
+<div class="section desc-bg" id="deskripsi">
+  <div class="section-inner">
+    <div class="sec-header fade-up">
+      <div class="sec-kicker">Tentang Proyek</div>
+      <h2 class="sec-title">LintasKota API</h2>
+    </div>
+    <div class="desc-content fade-up">
+      <p><strong>LintasKota API</strong> adalah sebuah <em>RESTful backend platform</em> yang dirancang khusus untuk memfasilitasi operasional agen travel antarkota dan layanan <em>carpooling</em>.</p>
+      <p>Dibangun menggunakan <em>framework</em> modern <strong>FastAPI</strong> dan bahasa pemrograman <strong>Python</strong>, sistem ini menawarkan performa tinggi dengan arsitektur yang <em>scalable</em> dan aman. API ini menangani mulai dari registrasi pengguna, manajemen rute perjalanan, hingga logika pemesanan kursi secara <em>real-time</em> yang mencegah over-booking pada armada kendaraan.</p>
+      <p>Fokus utama proyek ini tidak hanya pada fungsionalitas, tapi juga standar industri terkini—mencakup pengelolaan otorisasi via <strong>JSON Web Token (JWT)</strong> terenkripsi, Object-Relational Mapping (ORM) yang solid melalui <strong>SQLAlchemy</strong>, hingga auto-generated documentation berbasis OpenAPI.</p>
+    </div>
+  </div>
 </div>
 
 <!-- ─── INSTALASI & SETUP ─── -->
