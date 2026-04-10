@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 from pydantic import BaseModel
-from passlib.context import CryptContext
+import bcrypt
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -24,15 +24,15 @@ SECRET_KEY = "rahasia_lintaskota_super_aman"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # Fungsi utilitas keamanan
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(plain_password: str, hashed_password: str):
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
+def get_password_hash(password: str):
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -168,9 +168,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Endpoint: Tambah Rute Travel (Bisa diakses publik untuk testing saat ini)
+# Endpoint: Tambah Rute Travel (Hanya bisa diakses jika sudah login)
 @app.post("/routes", response_model=RouteResponse, status_code=status.HTTP_201_CREATED)
-def create_route(route: RouteCreate, db: Session = Depends(get_db)):
+def create_route(route: RouteCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     new_route = TravelRoute(**route.dict())
     db.add(new_route)
     db.commit()
